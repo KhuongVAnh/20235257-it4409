@@ -177,7 +177,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const API_URL = "http://localhost:5257";
+        const API_URL = "https://two0235257-it4409.onrender.com";
 
         // Hàm tiện ích: chuyển thông điệp lỗi fetch/network sang thông báo tiếng Việt
         function friendlyErrorMessage(err, defaultMsg) {
@@ -391,8 +391,9 @@
                         setMessage?.({ text: data?.message || msg, type: 'error' });
                         return;
                     }
-                    setUsers(data.data || []);
-                    setTotalPages(data.totalPages || 1);
+                    const users = Array.isArray(data) ? data : (data?.data || []);
+                    setUsers(users);
+                    setTotalPages(data?.totalPages || 1);
                 } catch (err) {
                     console.error("Fetch users error", err);
                     setMessage?.({ text: friendlyErrorMessage(err, 'Lỗi mạng khi lấy danh sách'), type: 'error' });

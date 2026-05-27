@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     age: Number,
+    address: String,
     createdAt: { type: Date, default: Date.now },
 });
 
@@ -42,8 +43,34 @@ app.post("/api/users", async (req, res) => {
 
 app.get("/api/users", async (req, res) => {
     try {
-        const users = await User.find();
-        res.json(users);
+        const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+        const limit = Math.max(parseInt(req.query.limit, 10) || 5, 1);
+        const search = (req.query.search || "").trim();
+
+        const filter = search
+            ? {
+                  $or: [
+                      { name: { $regex: search, $options: "i" } },
+                      { email: { $regex: search, $options: "i" } },
+                  ],
+              }
+            : {};
+
+        const [users, total] = await Promise.all([
+            User.find(filter)
+                .sort({ createdAt: -1 })
+                .skip((page - 1) * limit)
+                .limit(limit),
+            User.countDocuments(filter),
+        ]);
+
+        res.json({
+            data: users,
+            page,
+            limit,
+            total,
+            totalPages: Math.max(Math.ceil(total / limit), 1),
+        });
     } catch (error) {
         res.status(500).json({
             message: "Lỗi khi lấy danh sách",
