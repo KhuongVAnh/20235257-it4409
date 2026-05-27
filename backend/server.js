@@ -1,0 +1,85 @@
+const express = require("express");
+const mongoose = require("mongoose");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+const mongoURI =
+    "mongodb+srv://KVAnh_db_user:20235257@cluster0.9mq6py0.mongodb.net/?appName=Cluster0";
+
+mongoose
+    .connect(mongoURI)
+    .then(() => console.log("Đã kết nối tới MongoDB Atlas"))
+    .catch((err) => console.error("Lỗi kết nối MongoDB Atlas:", err));
+
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    age: Number,
+    createdAt: { type: Date, default: Date.now },
+});
+
+const User = mongoose.model("User", userSchema);
+
+app.post("/api/users", async (req, res) => {
+    try {
+        const user = new User(req.body);
+        const savedUser = await user.save();
+        res.status(201).json(savedUser);
+    } catch (error) {
+        res.status(400).json({
+            message: "Lỗi khi tạo người dùng",
+            error: error.message,
+        });
+    }
+});
+
+app.get("/api/users", async (req, res) => {
+    try {
+        const users = await User.find();
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({
+            message: "Lỗi khi lấy danh sách",
+            error: error.message,
+        });
+    }
+});
+
+app.put("/api/users/:id", async (req, res) => {
+    try {
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true },
+        );
+        if (!updatedUser)
+            return res
+                .status(404)
+                .json({ message: "Không tìm thấy người dùng" });
+        res.json(updatedUser);
+    } catch (error) {
+        res.status(400).json({
+            message: "Lỗi khi cập nhật",
+            error: error.message,
+        });
+    }
+});
+
+app.delete("/api/users/:id", async (req, res) => {
+    try {
+        const deletedUser = await User.findByIdAndDelete(req.params.id);
+        if (!deletedUser)
+            return res
+                .status(404)
+                .json({ message: "Không tìm thấy người dùng" });
+        res.json({ message: "Đã xóa người dùng thành công" });
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi khi xóa", error: error.message });
+    }
+});
+
+app.listen(PORT, () => {
+    console.log(`Server đang chạy tại: http://localhost:${PORT}`);
+});
