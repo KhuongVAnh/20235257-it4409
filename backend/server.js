@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -88,19 +87,6 @@ app.delete("/api/users/:id", async (req, res) => {
 
 app.get("/", (req, res) => {
     res.send("hello");
-});
-app.listen(PORT, () => {
-    console.log(`Server đang chạy tại: http://localhost:${PORT}`);
-});
-
-// Serve frontend static files (if present)
-const frontendPath = path.join(__dirname, "..", "frontend", "public");
-app.use(express.static(frontendPath));
-
-// If no API route matched, serve index.html for client-side routing
-app.get("*", (req, res) => {
-    if (req.path.startsWith("/api")) return res.status(404).json({ message: "Not found" });
-    res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 app.listen(PORT, () => {
